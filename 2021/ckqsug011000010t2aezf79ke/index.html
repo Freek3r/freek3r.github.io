@@ -1,0 +1,487 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FAT12文件结构详解 | Anioner's Blog</title><meta name="description" content="FAT12文件结构详细介绍与解析，网上讲的并不是很全面和直观，故自己整理一下知识点，当作是笔记了"><meta name="keywords" content="FAT12, bootloader, 软盘"><meta name="author" content="Anioner"><meta name="copyright" content="Anioner"><meta name="format-detection" content="telephone=no"><link rel="shortcut icon" href="https://i.loli.net/2020/08/21/n8aJhXoT9ibCzNl.jpg"><link rel="canonical" href="http://freek3r.github.io/2021/ckqsug011000010t2aezf79ke/"><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//fonts.googleapis.com" crossorigin="crossorigin"/><meta property="og:type" content="article"><meta property="og:title" content="FAT12文件结构详解"><meta property="og:url" content="http://freek3r.github.io/2021/ckqsug011000010t2aezf79ke/"><meta property="og:site_name" content="Anioner's Blog"><meta property="og:description" content="FAT12文件结构详细介绍与解析，网上讲的并不是很全面和直观，故自己整理一下知识点，当作是笔记了"><meta property="og:image" content="https://i.loli.net/2021/03/24/ZMcmpP1hsA5kqSK.jpg"><meta property="article:published_time" content="2021-07-07T02:10:06.000Z"><meta property="article:modified_time" content="2021-07-09T04:10:32.816Z"><meta name="twitter:card" content="summary"><script>var activateDarkMode = function () {
+  document.documentElement.setAttribute('data-theme', 'dark')
+  if (document.querySelector('meta[name="theme-color"]') !== null) {
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', '#000')
+  }
+}
+var activateLightMode = function () {
+  document.documentElement.setAttribute('data-theme', 'light')
+  if (document.querySelector('meta[name="theme-color"]') !== null) {
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', '#fff')
+  }
+}
+
+var getCookies = function (name) {
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop().split(';').shift()
+}
+
+var autoChangeMode = 'false'
+var t = getCookies('theme')
+if (autoChangeMode === '1') {
+  var isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+  var isLightMode = window.matchMedia('(prefers-color-scheme: light)').matches
+  var isNotSpecified = window.matchMedia('(prefers-color-scheme: no-preference)').matches
+  var hasNoSupport = !isDarkMode && !isLightMode && !isNotSpecified
+
+  if (t === undefined) {
+    if (isLightMode) activateLightMode()
+    else if (isDarkMode) activateDarkMode()
+    else if (isNotSpecified || hasNoSupport) {
+      console.log('You specified no preference for a color scheme or your browser does not support it. I Schedule dark mode during night time.')
+      var now = new Date()
+      var hour = now.getHours()
+      var isNight = hour <= 6 || hour >= 18
+      isNight ? activateDarkMode() : activateLightMode()
+    }
+    window.matchMedia('(prefers-color-scheme: dark)').addListener(function (e) {
+      if (Cookies.get('theme') === undefined) {
+        e.matches ? activateDarkMode() : activateLightMode()
+      }
+    })
+  } else if (t === 'light') activateLightMode()
+  else activateDarkMode()
+} else if (autoChangeMode === '2') {
+  now = new Date()
+  hour = now.getHours()
+  isNight = hour <= 6 || hour >= 18
+  if (t === undefined) isNight ? activateDarkMode() : activateLightMode()
+  else if (t === 'light') activateLightMode()
+  else activateDarkMode()
+} else {
+  if (t === 'dark') activateDarkMode()
+  else if (t === 'light') activateLightMode()
+}</script><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web&amp;display=swap"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  hexoversion: '5.4.0',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  bookmark: {
+    message_prev: '按',
+    message_next: '键将本页加入书签'
+  },
+  runtime_unit: '天',
+  runtime: false,
+  copyright: undefined,
+  ClickShowText: undefined,
+  medium_zoom: false,
+  fancybox: true,
+  Snackbar: undefined,
+  justifiedGallery: {
+    js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+    css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+  },
+  baiduPush: false,
+  highlightCopy: true,
+  highlightLang: true,
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isanchor: false    
+}</script><script id="config_change">var GLOBAL_CONFIG_SITE = { 
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isSidebar: true,
+  postUpdate: '2021-07-09 12:10:32'
+}</script><noscript><style>
+#nav {
+  opacity: 1
+}
+.justified-gallery img {
+  opacity: 1
+}
+</style></noscript><meta name="generator" content="Hexo 5.4.0"></head><body><div id="mobile-sidebar"><div id="menu_mask"></div><div id="mobile-sidebar-menus"><div class="mobile_author_icon"><img class="avatar-img" data-lazy-src="https://i.loli.net/2020/08/21/n8aJhXoT9ibCzNl.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="mobile_post_data"><div class="mobile_data_item is-center"><div class="mobile_data_link"><a href="/archives/"><div class="headline">文章</div><div class="length_num">6</div></a></div></div><div class="mobile_data_item is-center">      <div class="mobile_data_link"><a href="/tags/"><div class="headline">标签</div><div class="length_num">11</div></a></div></div><div class="mobile_data_item is-center">     <div class="mobile_data_link"><a href="/categories/"><div class="headline">分类</div><div class="length_num">5</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div></div></div><div id="body-wrap"><div id="sidebar"><i class="fas fa-arrow-right on" id="toggle-sidebar"></i><div class="sidebar-toc"><div class="sidebar-toc__title">目录</div><div class="sidebar-toc__progress"><span class="progress-notice">你已经读了</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar">     </div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%A3%81%E7%9B%98"><span class="toc-number">1.</span> <span class="toc-text">磁盘</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-%E7%AE%80%E4%BB%8B"><span class="toc-number">1.1.</span> <span class="toc-text">0x01 简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-%E7%B0%87%E3%80%81%E6%89%87%E5%8C%BA%E3%80%81%E6%89%87%E9%9D%A2%E3%80%81%E7%A3%81%E9%81%93%EF%BC%88%E6%9F%B1%E9%9D%A2%EF%BC%89%E5%92%8C%E7%A3%81%E5%A4%B4"><span class="toc-number">1.2.</span> <span class="toc-text">0x02 簇、扇区、扇面、磁道（柱面）和磁头</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#FAT12"><span class="toc-number">2.</span> <span class="toc-text">FAT12</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-%E4%BB%8B%E7%BB%8D"><span class="toc-number">2.1.</span> <span class="toc-text">0x01 介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84"><span class="toc-number">2.2.</span> <span class="toc-text">0x02 文件结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-%E5%BC%95%E5%AF%BC%E6%89%87%E5%8C%BA"><span class="toc-number">2.3.</span> <span class="toc-text">0x03 引导扇区</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-FAT%E8%A1%A8"><span class="toc-number">2.4.</span> <span class="toc-text">0x04 FAT表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x05-%E6%A0%B9%E7%9B%AE%E5%BD%95%E5%8C%BA"><span class="toc-number">2.5.</span> <span class="toc-text">0x05 根目录区</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x06-%E6%95%B0%E6%8D%AE%E5%8C%BA"><span class="toc-number">2.6.</span> <span class="toc-text">0x06 数据区</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E6%88%98"><span class="toc-number">3.</span> <span class="toc-text">实战</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-%E6%9F%A5%E7%9C%8B%E6%96%87%E4%BB%B6"><span class="toc-number">3.1.</span> <span class="toc-text">0x01 查看文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE%E2%80%94%E2%80%94%E5%B0%8F%E4%BA%8E512%E5%AD%97%E8%8A%82"><span class="toc-number">3.2.</span> <span class="toc-text">0x02 读取数据——小于512字节</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE%E2%80%94%E2%80%94%E5%A4%A7%E4%BA%8E512%E5%AD%97%E8%8A%82"><span class="toc-number">3.3.</span> <span class="toc-text">0x03 读取数据——大于512字节</span></a></li></ol></li></ol></div></div></div><header class="post-bg" id="page-header" style="background-image: url(https://i.loli.net/2021/03/24/ZMcmpP1hsA5kqSK.jpg)"><nav id="nav"><span class="pull-left" id="blog_name"><a class="blog_title" id="site-name" href="/">Anioner's Blog</a></span><span class="pull-right menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div></div><span class="toggle-menu close"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></span></span></nav><div id="post-info"><div id="post-title"><div class="posttitle">FAT12文件结构详解</div></div><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-07-07T02:10:06.000Z" title="发表于 2021-07-07 10:10:06">2021-07-07</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2021-07-09T04:10:32.816Z" title="更新于 2021-07-09 12:10:32">2021-07-09</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%89%AB%E7%9B%B2/">扫盲</a></span></div><div class="meta-secondline"> </div></div></div></header><main class="layout_post" id="content-inner"><article id="post"><div class="post-content" id="article-container"><span id="more"></span>
+
+<h1 id="磁盘"><a href="#磁盘" class="headerlink" title="磁盘"></a>磁盘</h1><h2 id="0x01-简介"><a href="#0x01-简介" class="headerlink" title="0x01 简介"></a>0x01 简介</h2><p>磁盘（Disk）是指利用磁记录技术存储数据的存储器。</p>
+<p>磁盘是计算机主要的存储介质，可以存储大量的二进制数据，并且断电后也能保持数据不丢失。早期计算机使用的磁盘是软磁盘（Floppy Disk，简称软盘），如今常用的磁盘是硬磁盘（Hard disk，简称硬盘）。</p>
+<h2 id="0x02-簇、扇区、扇面、磁道（柱面）和磁头"><a href="#0x02-簇、扇区、扇面、磁道（柱面）和磁头" class="headerlink" title="0x02 簇、扇区、扇面、磁道（柱面）和磁头"></a>0x02 簇、扇区、扇面、磁道（柱面）和磁头</h2><ol>
+<li>扇区是磁盘最小读写单位</li>
+<li>簇是操作系统最小的读写单位，一般为$2^n$个扇区</li>
+<li>扇面是多个并列的扇区组成的</li>
+<li>磁道是由多个并排的扇区组成的</li>
+<li>磁头是用来读取数据用的，一般可以由多个磁头</li>
+</ol>
+<p><img src= "/img/loading.gif" data-lazy-src="https://i.loli.net/2021/07/09/expj1ndcRfl6M7Y.png" alt="在这里插入图片描述"></p>
+<h1 id="FAT12"><a href="#FAT12" class="headerlink" title="FAT12"></a>FAT12</h1><h2 id="0x01-介绍"><a href="#0x01-介绍" class="headerlink" title="0x01 介绍"></a>0x01 介绍</h2><p><code>FAT</code> 是 <code>File Allocation Table</code> 的缩写，即<code>文件分配表</code> 。<code>FAT12</code> 是 <code>DOS</code> 时代就开始使用的文件系统，直到2009年仍然在软盘上使用。</p>
+<h2 id="0x02-文件结构"><a href="#0x02-文件结构" class="headerlink" title="0x02 文件结构"></a>0x02 文件结构</h2><p><code>FAT12</code> 软盘是由<strong>引导扇区</strong>、<strong>FAT 1表</strong>、<strong>FAT 2表</strong>、<strong>根目录区</strong> 与 <strong>数据区</strong>构成，结构图如下：</p>
+<p><img src= "/img/loading.gif" data-lazy-src="https://i.loli.net/2021/07/07/kmH7fdz4egwcotb.png" alt="image-20210707102429351"></p>
+<p><code>FAT12</code> 软盘格式化之后，会有 <code>2</code> 个磁头，每个磁头有 <code>80</code> 个磁道（柱面），每个磁道（柱面）有 <code>18</code> 个扇区，每个扇区有 <code>512</code> 字节的空间，所以每个标准的 <code>FAT12</code> 软盘（<em>实际上，<code>FAT12</code> 软盘可以不格式为80磁道，每个磁道也可以不是18扇区，这是题外话，这里只研究标准格式的 <code>FAT12</code> 软盘。</em>）应该有：$2\times80\times18\times512=1474560B=1440Kb\approx1.44Mb$（为什么是约等于 <code>1.44Mb</code> 各位算一下就知道了）。</p>
+<h2 id="0x03-引导扇区"><a href="#0x03-引导扇区" class="headerlink" title="0x03 引导扇区"></a>0x03 引导扇区</h2><p>引导扇区，顾名思义就是用来引导操作系统的地方。早期软盘流行的时代，电脑在每次启动的时候都会将 <code>FAT12</code> 格式的软盘读入到内存的 <code>0x0000:0x7c00</code> 处，并跳转到这里继续执行代码，从而达到引导操作系统的目的。</p>
+<p>引导扇区从 <strong>0磁道0磁头0扇区</strong> 开始，且只有 <code>1</code> 个扇区，即只有 <code>512</code> 字节的空间。引导扇区里有一个特定的数据结构，在操作系统格式化软盘时回自动生成，具体数据结构如下：</p>
+<table>
+<thead>
+<tr>
+<th align="center">名称</th>
+<th align="center">偏移</th>
+<th align="center">长度</th>
+<th align="center">参考值</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">BS_jmpBOOT</td>
+<td align="center">0</td>
+<td align="center">3</td>
+<td align="center">jmp LABEL_STASRT<br />nop</td>
+<td align="center">一个跳转指令，因为软盘被加载到内存后回跳转到 <code>0x0000:0x7c00</code> 处，也就是此处，所以需要跳转到后面的 <code>引导代码</code> 部分，加个 <code>nop</code>是为了对齐 <code>3</code> 字节长度</td>
+</tr>
+<tr>
+<td align="center">BS_OEMName</td>
+<td align="center">3</td>
+<td align="center">8</td>
+<td align="center">‘Anioner ‘</td>
+<td align="center">厂商名，如果不足八字节，则需要用 <strong>空格</strong> 填充</td>
+</tr>
+<tr>
+<td align="center">BPB_BytesPerSec</td>
+<td align="center">11</td>
+<td align="center">2</td>
+<td align="center">0x200</td>
+<td align="center">每个扇区的大小，单位是 <strong>字节</strong></td>
+</tr>
+<tr>
+<td align="center">BPB_SecPerClus</td>
+<td align="center">13</td>
+<td align="center">1</td>
+<td align="center">0x01</td>
+<td align="center">每个簇中的扇区数</td>
+</tr>
+<tr>
+<td align="center">BPB_ResvdSecCnt</td>
+<td align="center">14</td>
+<td align="center">2</td>
+<td align="center">0x01</td>
+<td align="center">保留扇区数，<code>FAT12</code> 必须为 <code>1</code></td>
+</tr>
+<tr>
+<td align="center">BPB_NumFATs</td>
+<td align="center">16</td>
+<td align="center">1</td>
+<td align="center">0x02</td>
+<td align="center">FAT表数量</td>
+</tr>
+<tr>
+<td align="center">BPB_RootEntCnt</td>
+<td align="center">17</td>
+<td align="center">2</td>
+<td align="center">0xe0</td>
+<td align="center">根目录区文件最大数量</td>
+</tr>
+<tr>
+<td align="center">BPB_TotSec16</td>
+<td align="center">19</td>
+<td align="center">2</td>
+<td align="center">0xb40</td>
+<td align="center">扇区总数 ，$2\times80\times18=2880=0xb40$</td>
+</tr>
+<tr>
+<td align="center">BPB_Media</td>
+<td align="center">21</td>
+<td align="center">1</td>
+<td align="center">0xf0</td>
+<td align="center">介质描述符，对于可移动存储介质，这里是0xf0，对于不可移动存储介质，这里是0xf8</td>
+</tr>
+<tr>
+<td align="center">BPB_FATSz16</td>
+<td align="center">22</td>
+<td align="center">2</td>
+<td align="center">0x09</td>
+<td align="center">每个FAT表所占的扇区数</td>
+</tr>
+<tr>
+<td align="center">BPB_SecPerTrk</td>
+<td align="center">24</td>
+<td align="center">2</td>
+<td align="center">0x12</td>
+<td align="center">每个磁道扇区数</td>
+</tr>
+<tr>
+<td align="center">BPB_NumHeads</td>
+<td align="center">26</td>
+<td align="center">2</td>
+<td align="center">0x02</td>
+<td align="center">磁头数</td>
+</tr>
+<tr>
+<td align="center">BPB_HiddSec</td>
+<td align="center">28</td>
+<td align="center">4</td>
+<td align="center">0x00</td>
+<td align="center">隐藏的扇区数</td>
+</tr>
+<tr>
+<td align="center">BPB_TotSec32</td>
+<td align="center">32</td>
+<td align="center">4</td>
+<td align="center">0x00</td>
+<td align="center">BPB_TotSec16，则这里给出FAT表扇区数</td>
+</tr>
+<tr>
+<td align="center">BS_DrvNum</td>
+<td align="center">36</td>
+<td align="center">1</td>
+<td align="center">0x00</td>
+<td align="center">BIOS中断0x13得到的驱动器参数，0x00为软盘，0x80为硬盘</td>
+</tr>
+<tr>
+<td align="center">BS_Reserved1</td>
+<td align="center">37</td>
+<td align="center">1</td>
+<td align="center">0x00</td>
+<td align="center">保留</td>
+</tr>
+<tr>
+<td align="center">BS_BootSig</td>
+<td align="center">38</td>
+<td align="center">1</td>
+<td align="center">0x29</td>
+<td align="center">扩展引导标记，用来声明下面三个区可以用</td>
+</tr>
+<tr>
+<td align="center">BS_VolID</td>
+<td align="center">39</td>
+<td align="center">4</td>
+<td align="center">0x00</td>
+<td align="center">卷序列号</td>
+</tr>
+<tr>
+<td align="center">BS_VolLab</td>
+<td align="center">43</td>
+<td align="center">11</td>
+<td align="center">‘Annioner&nbsp;&nbsp;&nbsp;’</td>
+<td align="center">卷标，不足11位用 <strong>空格</strong> 填充</td>
+</tr>
+<tr>
+<td align="center">BS_FileSysType</td>
+<td align="center">54</td>
+<td align="center">8</td>
+<td align="center">‘FAT12   ‘</td>
+<td align="center">文件系统类型，不足8位用 <strong>空格</strong> 填充</td>
+</tr>
+<tr>
+<td align="center">引导代码及其他内容</td>
+<td align="center">62</td>
+<td align="center">448</td>
+<td align="center"></td>
+<td align="center">引导代码及其他数据，不足448用 <code>0x00</code> 填充</td>
+</tr>
+<tr>
+<td align="center">结束标志</td>
+<td align="center">510</td>
+<td align="center">2</td>
+<td align="center">0xaa55</td>
+<td align="center">结束标志，第510字节位0x55，第511字节位0xaa</td>
+</tr>
+</tbody></table>
+<h2 id="0x04-FAT表"><a href="#0x04-FAT表" class="headerlink" title="0x04 FAT表"></a>0x04 FAT表</h2><p><code>FAT 1</code> 表和 <code>FAT 2</code> 表是两个完全相同的表，每个表占用 <code>9</code> 个扇区，<code>FAT 1</code> 表占用 <code>1-9</code> 扇区，<code>FAT 2</code>表 占用 <code>10-18</code> 扇区。其中，<code>FAT 2</code> 表是 <code>FAT 1</code> 表的备份。所以这里只讲解 <code>FAT 1</code>表。</p>
+<p><code>FAT 1</code> 表中记录了每个文件所在的扇区，其被称为 <strong>条目</strong>。每个条目占 <code>1.5</code> 个字节，即 <code>12</code> 位。每一个条目对应一个数据区的扇区号。其中，前两个条目（FAT[0]，FAT[1]）并不会被使用。所以对应的，数据区中的扇区编号是从3开始的，即，数据区没有逻辑上的第1，2号扇区。加入 <code>FAT</code> 表的某个条目值为 <code>0x005</code> 则对应数据区的第 <code>5 - 2</code> 号扇区，物理上对应 $9\times2+\frac{BPB_RootEntCnt\times32}{BPB_BytesPerSec}+5-2=21+\frac{224 \times32}{512}=35$号扇区。其中<code>32</code> 是根目录的目录结构大小（后面会讲）。</p>
+<p><code>FAT</code> 表条目值的含义如下：</p>
+<table>
+<thead>
+<tr>
+<th>FAT条目</th>
+<th>参考值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>0xff0</td>
+<td>磁盘标识</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0xfff</td>
+<td>第一个扇区（簇）被占用</td>
+</tr>
+<tr>
+<td>2</td>
+<td>0x003</td>
+<td>表示下一个部分的数据在数据区的第3-2个扇区，并要在FAT[3]条目中找更后面的数据</td>
+</tr>
+<tr>
+<td>3</td>
+<td>0x004</td>
+<td>表示下一个部分的数据在数据区的第3-2个扇区，并要在FAT[4]条目中找更后面的数据</td>
+</tr>
+<tr>
+<td>N</td>
+<td>0xff7</td>
+<td>坏扇区（簇）</td>
+</tr>
+<tr>
+<td>N+1</td>
+<td>0xff8</td>
+<td>文件结束，0xff8-0xfff都表示文件结束</td>
+</tr>
+</tbody></table>
+<h2 id="0x05-根目录区"><a href="#0x05-根目录区" class="headerlink" title="0x05 根目录区"></a>0x05 根目录区</h2><p>根目录区有目录结构组成，每个目录结构大小为<code>32</code>字节并且对应一个文件的索引。根目录从第 <code>19</code> 号扇区开始，横跨$\frac{BPB_RootEntCnt\times32}{BPB_BytesPerSec}=14$个扇区，所以<code>32</code>号扇区是最后一个根目录区的扇区。目录结构如下：</p>
+<table>
+<thead>
+<tr>
+<th>数据项</th>
+<th>偏移</th>
+<th>长度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DIR_NAME</td>
+<td>0x00</td>
+<td>0x08</td>
+<td>文件名，不足8字节用<strong>空格</strong>填充</td>
+</tr>
+<tr>
+<td>DIR_Ext</td>
+<td>0x08</td>
+<td>0x0b</td>
+<td>扩展名，不足3字节用<strong>空格</strong>填充</td>
+</tr>
+<tr>
+<td>DIR_Attr</td>
+<td>0x0b</td>
+<td>0x01</td>
+<td>文件属性</td>
+</tr>
+<tr>
+<td>Reserve</td>
+<td>0x0c</td>
+<td>0x0a</td>
+<td>保留位</td>
+</tr>
+<tr>
+<td>DIR_WrtTime</td>
+<td>0x16</td>
+<td>0x02</td>
+<td>最后一次写入时间</td>
+</tr>
+<tr>
+<td>DIR_WrtDate</td>
+<td>0x18</td>
+<td>0x02</td>
+<td>最后一次写入日期</td>
+</tr>
+<tr>
+<td>DIR_FstClus</td>
+<td>0x1a</td>
+<td>0x02</td>
+<td>文件开始的扇区（簇）号</td>
+</tr>
+<tr>
+<td>DIS_FileSize</td>
+<td>0x1c</td>
+<td>0x04</td>
+<td>文件大小</td>
+</tr>
+</tbody></table>
+<p>看完这个就能更好的理解 <code>FAT</code> 表了，文件的开始扇区（簇）号是从根目录区获得的，如何根据文件大小（大于512字节的数据会被放到其他扇区，且所在扇区不一定连续）去判断是否有必要读取 <code>FAT</code> 表中下一个扇区（簇）号。</p>
+<h2 id="0x06-数据区"><a href="#0x06-数据区" class="headerlink" title="0x06 数据区"></a>0x06 数据区</h2><p>数据区很好理解，也没有像上面三个区那样有特殊的数据结构，他就是单纯的存储数据没啥讲的。</p>
+<h1 id="实战"><a href="#实战" class="headerlink" title="实战"></a>实战</h1><h2 id="0x01-查看文件"><a href="#0x01-查看文件" class="headerlink" title="0x01 查看文件"></a>0x01 查看文件</h2><p><img src= "/img/loading.gif" data-lazy-src="https://i.loli.net/2021/07/08/iPas4UlmcBLVwj9.png" alt="image-20210708212920427"></p>
+<p>可以看到前 <code>0x200</code> 字节是 <code>引导扇区</code> 具体内容我们不用管，因为这里主要还是用来引导系统用的。直接看 <code>19</code> 号扇区 ，即 <code>根目录区</code> 的开始扇区，在 $512\times19=0x2600’$ 字节开始看。</p>
+<p><img src= "/img/loading.gif" data-lazy-src="https://i.loli.net/2021/07/08/Jwp5GSkNuRLgsXP.png" alt="image-20210708213516901"></p>
+<p>这里保存了大量的目录信息，这个软盘镜像已经被我用各种大大小小的文件塞满了，所以能看到很多 <code>txt</code> 文件。</p>
+<h2 id="0x02-读取数据——小于512字节"><a href="#0x02-读取数据——小于512字节" class="headerlink" title="0x02 读取数据——小于512字节"></a>0x02 读取数据——小于512字节</h2><p>我们直接看 <code>0x2620</code> 处，根据上面的知识，前 <code>8</code> 字节为文件名，即文件名为 <code>G</code>（空格是用来填充的）。再往后 <code>3</code> 字节是后缀，所以整个文件名是 <code>G.txt</code>，中间的信息并不是重点，所以忽略，直接看 <code>0x263a </code> 处的文件开始扇区，为<code>0x0082</code>，即<strong>数据区的第130个扇区</strong>，数据区从第 <code>33</code> 个扇区开始，因为数据区没有 <code>FAT</code> 表对应的前两个扇区，所以数据在第 $33+130-2=161$ 号扇区，换成字节就是 $512 \times 161=82432=0x14200$ 字节处。</p>
+<p><img src= "/img/loading.gif" data-lazy-src="https://i.loli.net/2021/07/08/YPpgWIyTzO47wFL.png" alt="image-20210708215244057"></p>
+<p>可以看到文件内容到 <code>0x143c8</code> 就结束了，后面不足 <code>512</code> 字节的部分用 <code>0x00</code> 填充，这样浪费了很多空间（比如只有1kb的文件却单独占了一整个扇区）。</p>
+<p><img src= "/img/loading.gif" data-lazy-src="https://i.loli.net/2021/07/08/yD5MhWSnIkmOisJ.png" alt="image-20210708215557429"></p>
+<p>直接用 <code>Linux</code> 挂在镜像并读取后会发现跟上面一模一样</p>
+<h2 id="0x03-读取数据——大于512字节"><a href="#0x03-读取数据——大于512字节" class="headerlink" title="0x03 读取数据——大于512字节"></a>0x03 读取数据——大于512字节</h2><p><img src= "/img/loading.gif" data-lazy-src="https://i.loli.net/2021/07/08/KAnbNlpfaLYdquc.png" alt="image-20210708215722739"></p>
+<p>我们就来读取这个<code>Test.txt</code></p>
+<p><img src= "/img/loading.gif" data-lazy-src="https://i.loli.net/2021/07/08/l65fHzPVx4kLUY7.png" alt="image-20210708215929813"></p>
+<p>从 <code>0x3ae0</code> 处可以找到 <code>Test.txt</code> 文件所在的信息，其数据内容存放的扇区为 <code>0x08fc</code> 即 <code>2300</code>，所以其数据内容所在的扇区为 $33+2300-2=2331$，在 $512\times2331=1193472=0x123600$ 处</p>
+<p><img src= "/img/loading.gif" data-lazy-src="https://i.loli.net/2021/07/08/bqeM7PkCTuaFfE6.png" alt="image-20210708220405879"></p>
+<p>可以看到这部分数据横跨了很多扇区，这里只不过恰好是存到了连续的扇区。</p>
+<p>假设我们不知道这个文件存放的扇区是连续的，那么我们应该如何去找呢？这里就要用到 <code>FAT表</code> 了。上面说了第一部分文件内容在数据区的第<code>2300</code> 个扇区，那么我们就要从 <code>FAT表</code> 当中的第 <code>2300</code> 个条目去找文件下一部分的扇区在哪儿。</p>
+<p>因为一个条目占 <code>1.5</code> 个字节，所以我们要去 $512+2300 \times1.5=3962$ 字节，即 <code>0xf7a</code> 处寻找。</p>
+<p><img src= "/img/loading.gif" data-lazy-src="https://i.loli.net/2021/07/08/eglLKz1pqdAmDnr.png" alt="image-20210708235259373"></p>
+<p>将这行数据按如下排列：</p>
+<table>
+<thead>
+<tr>
+<th align="center">0</th>
+<th align="center">1</th>
+<th align="center">2</th>
+<th align="center">3</th>
+<th align="center">4</th>
+<th align="center">5</th>
+<th align="center">6</th>
+<th align="center">7</th>
+<th align="center">8</th>
+<th align="center">9</th>
+<th align="center">a</th>
+<th>b</th>
+<th>c</th>
+<th>d</th>
+<th>e</th>
+<th>f</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">8f</td>
+<td align="center">f7</td>
+<td align="center">88</td>
+<td align="center">8f</td>
+<td align="center">f9</td>
+<td align="center">f8</td>
+<td align="center">ff</td>
+<td align="center">00</td>
+<td align="center">00</td>
+<td align="center">00</td>
+<td align="center">fd</td>
+<td>e8</td>
+<td>8f</td>
+<td>ff</td>
+<td>08</td>
+<td>90</td>
+</tr>
+</tbody></table>
+<p>因为不论是16位、23位还是64位系统都无法寻址半个字节，所以我们也就无法寻址 <code>1.5</code> 个字节，所以只能先读取两个字节，为 <code>0xe8fd</code>，然后进行运算。这里要分条目的奇偶性，如果条目是偶数就跟 <code>0xfff</code> 进行<strong>与</strong>运算；如果条目是奇数，就右移四个比特位。</p>
+<p>这里条目是 <code>2300</code>，是偶数，所以 <code>0xe8fd</code> 跟 <code>0xfff</code> 与运算的结果是 <code>0x8fd</code> 即 <code>2301</code>，所以下一部分的数据在 第$33 + 2301 -2=2332$ 个扇区，也就是 $512 \times2332=1193984=0x123800$ 字节处。</p>
+<p><img src= "/img/loading.gif" data-lazy-src="https://i.loli.net/2021/07/09/jsVxWK5LZFi92EJ.png" alt="image-20210709001521094"></p>
+<p>在没有遇到上面所以说的 <code>0xff8-0xfff</code> 之前，我们获取的每个条目都是下一部分数据所在的扇区，也是下一个要去寻找的 <code>FAT表</code> 条目。比如 <code>2301</code> 对应的就是 <code>FAT表</code> 的第 <code>2301</code> 个条目，也就是 $512+2301 \times1.5=3963.5$，舍去小数点，就要去 <code>3963</code> 字节处寻址，即 <code>0xf7b</code> 处，所以是 <code>0x8fe8</code>，由于 <code>2301</code> 是奇数，所以右移四位是 <code>0x8fe</code>，即 <code>2302</code>。</p>
+</div><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">Anioner</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://freek3r.github.io/2021/ckqsug011000010t2aezf79ke/">http://freek3r.github.io/2021/ckqsug011000010t2aezf79ke/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://freek3r.github.io" target="_blank">Anioner's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/FAT12/">FAT12</a><a class="post-meta__tags" href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统</a></div><div class="post_share"><div class="social-share" data-image="https://i.loli.net/2021/03/24/ZMcmpP1hsA5kqSK.jpg" data-sites="wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2021/cknbhlocq00010ot29nxodjh8/"><img class="next-cover" data-lazy-src="https://i.loli.net/2021/04/10/wrBh7cyEpUG4sHX.png" onerror="onerror=null;src='/img/404.jpg'"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">SQL注入技巧</div></div></a></div></nav></article></main><footer id="footer" data-type="color"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By Anioner</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><section id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="font_plus" type="button" title="放大字体"><i class="fas fa-plus"></i></button><button id="font_minus" type="button" title="缩小字体"><i class="fas fa-minus"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></section><div><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module" defer></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js" async></script><div class="js-pjax"><script>if (!window.MathJax) {
+  window.MathJax = {
+    loader: {
+      source: {
+        '[tex]/amsCd': '[tex]/amscd'
+      }
+    },
+    tex: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"]],
+      tags: 'ams'
+    },
+    options: {
+      renderActions: {
+        findScript: [10, doc => {
+          for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+            const display = !!node.type.match(/; *mode=display/)
+            const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+            const text = document.createTextNode('')
+            node.parentNode.replaceChild(text, node)
+            math.start = {node: text, delim: '', n: 0}
+            math.end = {node: text, delim: '', n: 0}
+            doc.math.push(math)
+          }
+        }, '']
+      }
+    }
+  }
+  
+  var script = document.createElement('script')
+  script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
+  script.id = 'MathJax-script'
+  script.async = true
+  document.head.appendChild(script)
+} else {
+  MathJax.startup.document.state(0)
+  MathJax.texReset()
+  MathJax.typeset()
+}</script></div></div></body></html>
